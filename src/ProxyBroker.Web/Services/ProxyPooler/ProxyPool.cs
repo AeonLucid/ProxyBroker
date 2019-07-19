@@ -46,7 +46,14 @@ namespace ProxyBroker.Web.Services.ProxyPooler
             }
         }
 
-        public Proxy Get(bool forceChecked = false)
+        public bool Has(bool forceChecked = true)
+        {
+            return forceChecked
+                ? _proxiesChecked.TryPeek(out _)
+                : _proxiesUnchecked.TryPeek(out _);
+        }
+
+        public Proxy Get(bool forceChecked = true)
         {
             Proxy result;
             

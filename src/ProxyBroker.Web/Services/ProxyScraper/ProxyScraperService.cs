@@ -112,7 +112,7 @@ namespace ProxyBroker.Web.Services.ProxyScraper
                     // Wait 5 seconds.
                     await Task.Delay(5000, stoppingToken);
                 }
-                catch (TaskCanceledException e)
+                catch (TaskCanceledException)
                 {
                     if (stoppingToken.IsCancellationRequested)
                     {

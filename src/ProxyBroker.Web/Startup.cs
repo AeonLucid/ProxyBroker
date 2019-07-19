@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ProxyBroker.Web.Services.ProxyChecker;
 using ProxyBroker.Web.Services.ProxyPooler;
 using ProxyBroker.Web.Services.ProxyScraper;
 using Serilog;
@@ -37,6 +38,7 @@ namespace ProxyBroker.Web
 
             services.AddSingleton<IProxyPool, ProxyPool>();
             services.AddHostedService<ProxyScraperService>();
+            services.AddHostedService<ProxyCheckerService>();
             
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }

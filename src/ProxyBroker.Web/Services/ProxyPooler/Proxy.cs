@@ -14,6 +14,7 @@ namespace ProxyBroker.Web.Services.ProxyPooler
         public string Ip { get; }
         public int Port { get; }
         public ProxyProtocol Protocol { get; set; }
+        public bool Checked { get; set; } = false;
         
         public async Task ConnectAsync()
         {

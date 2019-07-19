@@ -2,6 +2,7 @@ namespace ProxyBroker.Web.Services.ProxyPooler
 {
     public interface IProxyPool
     {
-        void Add(Proxy proxy);
+        void Put(Proxy proxy);
+        Proxy Get(bool forceChecked = false);
     }
 }

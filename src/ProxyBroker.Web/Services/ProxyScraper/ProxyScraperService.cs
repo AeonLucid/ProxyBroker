@@ -85,7 +85,7 @@ namespace ProxyBroker.Web.Services.ProxyScraper
 
                                     foreach (var proxy in proxies)
                                     {
-                                        _proxyPool.Add(proxy);
+                                        _proxyPool.Put(proxy);
                                     }
                                     
                                     _logger.LogDebug("Scraped {0} from {1}.", proxies.Count, name);

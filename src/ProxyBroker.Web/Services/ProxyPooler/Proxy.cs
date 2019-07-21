@@ -13,9 +13,12 @@ namespace ProxyBroker.Web.Services.ProxyPooler
 
         public string Ip { get; }
         public int Port { get; }
-        public ProxyProtocol Protocol { get; set; }
-        public bool Checked { get; set; } = false;
         
+        public bool Checked { get; set; } = false;
+        public long ResponseTime { get; set; }
+        public ProxyProtocol Protocol { get; set; }
+        public ProxyType Type { get; set; }
+
         public async Task ConnectAsync()
         {
             
@@ -50,6 +53,11 @@ namespace ProxyBroker.Web.Services.ProxyPooler
             {
                 return (StringComparer.OrdinalIgnoreCase.GetHashCode(Ip) * 397) ^ Port;
             }
+        }
+
+        public override string ToString()
+        {
+            return $"{Ip}:{Port}";
         }
     }
 }

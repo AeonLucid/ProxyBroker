@@ -1,16 +1,23 @@
 using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using ProxyBroker.Web.Services.ProxyChecker.Models;
 using ProxyBroker.Web.Services.ProxyPooler;
 
 namespace ProxyBroker.Web.Services.ProxyChecker
 {
     public class ProxyCheckerService : BackgroundService
     {
-        private const int MaxConcurrency = 3;
+        private const int MaxConcurrency = 8;
         
         private readonly ILogger<ProxyCheckerService> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
@@ -83,7 +90,54 @@ namespace ProxyBroker.Web.Services.ProxyChecker
 
         private async Task CheckProxyAsync(Proxy proxy)
         {
-            _logger.LogInformation(proxy.Ip);
+            var httpClientHandler = new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                UseCookies = false,
+                Proxy = new WebProxy(proxy.Ip, proxy.Port)
+            };
+
+            using (var httpClient = new HttpClient(httpClientHandler, true))
+            {
+                httpClient.Timeout = TimeSpan.FromSeconds(5);
+
+                try
+                {
+                    var stopwatch = Stopwatch.StartNew();
+                    var responseStr = await httpClient.GetStringAsync("http://hb.opencpu.org/get?show_env");
+                    var responseTime = stopwatch.ElapsedMilliseconds;
+                    var response = JsonConvert.DeserializeObject<HttpBinResponse>(responseStr);
+
+                    proxy.Checked = true;
+                    proxy.ResponseTime = responseTime;
+                    proxy.Protocol = ProxyProtocol.HTTP;
+
+                    var headers = response.Headers.ToDictionary(x => x.Key.ToLower(), y => y.Value);
+                    if (headers.ContainsKey("x-forwarded-for"))
+                    {
+                        // TODO: Need to check for real ip.
+                        proxy.Type = ProxyType.Transparent;
+                    }
+                    else if (headers.ContainsKey("via"))
+                    {
+                        // TODO: Need to check for real ip.
+                        proxy.Type = ProxyType.Transparent;
+                    }
+                    else
+                    {
+                        proxy.Type = ProxyType.Elite;
+                    }
+
+                    _proxyPool.Put(proxy);
+                    
+                    _logger.LogDebug("[{0}] Works, took {1}ms", proxy, proxy.ResponseTime);
+                }
+                catch (Exception e)
+                {
+                    _logger.LogDebug("[{0}] Exception: {1}", proxy, e.GetType().Name);
+                    return;
+                }
+            }
         }
     }
 }
